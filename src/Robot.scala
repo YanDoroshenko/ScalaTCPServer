@@ -103,11 +103,11 @@ object Robot {
               (reader.read() << 16) |
               (reader.read() << 8) |
               reader.read()
-            if (foto.map(_.toLong).sum == hashsum)
+            if (foto.map((e: Byte) => (e & 0xff).toLong).sum == hashsum)
               ok
             else
               badChecksum
-            str + foto.mkString("["," ", "]") + " with actual hashsum: " + foto.map(_.toLong).sum + "\r\nHashsum entered: " + hashsum
+            str + foto.mkString("["," ", "]") + " with actual hashsum: " + foto.map((e: Byte) => (e & 0xff).toLong).sum + "\r\nHashsum entered: " + hashsum
           case _ if last == '\r' && c == '\n' =>
             ok
             buffer.toString()
