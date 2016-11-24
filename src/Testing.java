@@ -19,7 +19,7 @@ public class Testing {
 
     @BeforeClass
     public static void startServer() throws Exception {
-        String[] args = {"3999"};
+        String[] args = {"3001"};
         server = new Thread(() -> Robot.main(args));
         server.start();
         Thread.sleep(6000);
@@ -27,7 +27,7 @@ public class Testing {
 
     @Test
     public void testSyntaxError() throws Exception {
-        Socket socket = new Socket("127.0.0.1", 3999);
+        Socket socket = new Socket("127.0.0.1", 3001);
         OutputStream out = socket.getOutputStream();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         assertEquals("200 LOGIN", in.readLine());
@@ -50,7 +50,7 @@ public class Testing {
 
     @Test
     public void testInfo() throws Exception {
-        Socket socket = new Socket("127.0.0.1", 3999);
+        Socket socket = new Socket("127.0.0.1", 3001);
         OutputStream out = socket.getOutputStream();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         assertEquals("200 LOGIN", in.readLine());
@@ -76,7 +76,7 @@ public class Testing {
 
     @Test
     public void testLoginFailed() throws Exception {
-        Socket socket = new Socket("127.0.0.1", 3999);
+        Socket socket = new Socket("127.0.0.1", 3001);
         OutputStream out = socket.getOutputStream();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         assertEquals("200 LOGIN", in.readLine());
@@ -95,8 +95,28 @@ public class Testing {
     }
 
     @Test
+    public void testEmptyLogin() throws Exception {
+        Socket socket = new Socket("127.0.0.1", 3001);
+        OutputStream out = socket.getOutputStream();
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        assertEquals("200 LOGIN", in.readLine());
+        out.write("\0\r\n".getBytes());
+        out.flush();
+        assertEquals("201 PASSWORD", in.readLine());
+        out.write("0\r\n".getBytes());
+        out.flush();
+        assertEquals("500 LOGIN FAILED", in.readLine());
+        try {
+            assertEquals(-1, in.read());
+        }
+        catch (SocketException e) {
+        }
+        socket.close();
+    }
+
+    @Test
     public void testFoto() throws Exception {
-        Socket socket = new Socket("127.0.0.1", 3999);
+        Socket socket = new Socket("127.0.0.1", 3001);
         OutputStream out = socket.getOutputStream();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         assertEquals("200 LOGIN", in.readLine());
@@ -123,8 +143,33 @@ public class Testing {
     }
 
     @Test
+    public void testFotoBadLength() throws Exception {
+        Socket socket = new Socket("127.0.0.1", 3001);
+        OutputStream out = socket.getOutputStream();
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        assertEquals("200 LOGIN", in.readLine());
+        out.write("2\r\n".getBytes());
+        out.flush();
+        assertEquals("201 PASSWORD", in.readLine());
+        out.write("50\r\n".getBytes());
+        out.flush();
+        assertEquals("202 OK", in.readLine());
+        out.write("FOTO -13 A\r\nB\0CD\r\nEFGH".getBytes());
+        byte[] hashsum = {0x0, 0x0, 0x2, 0x52};
+        out.write(hashsum);
+        out.flush();
+        assertEquals("501 SYNTAX ERROR", in.readLine());
+        try {
+            assertEquals(-1, in.read());
+        }
+        catch (SocketException e) {
+        }
+        socket.close();
+    }
+
+    @Test
     public void testMalformedFoto() throws Exception {
-        Socket socket = new Socket("127.0.0.1", 3999);
+        Socket socket = new Socket("127.0.0.1", 3001);
         OutputStream out = socket.getOutputStream();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         assertEquals("200 LOGIN", in.readLine());
@@ -152,7 +197,7 @@ public class Testing {
 
     @Test
     public void testBadChecksum() throws Exception {
-        Socket socket = new Socket("127.0.0.1", 3999);
+        Socket socket = new Socket("127.0.0.1", 3001);
         OutputStream out = socket.getOutputStream();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         assertEquals("200 LOGIN", in.readLine());
@@ -180,7 +225,7 @@ public class Testing {
 
     @Test
     public void testComplexFoto() throws Exception {
-        Socket socket = new Socket("127.0.0.1", 3999);
+        Socket socket = new Socket("127.0.0.1", 3001);
         OutputStream out = socket.getOutputStream();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         assertEquals("200 LOGIN", in.readLine());
@@ -208,6 +253,21 @@ public class Testing {
         out.write("50\r\n".getBytes());
         out.flush();
         assertEquals("501 SYNTAX ERROR", in.readLine());
+        try {
+            assertEquals(-1, in.read());
+        }
+        catch (SocketException e) {
+        }
+        socket.close();
+    }
+
+    @Test
+    public void timeoutTest() throws Exception{
+        Socket socket = new Socket("127.0.0.1", 3001);
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        assertEquals("200 LOGIN", in.readLine());
+        Thread.sleep(45000);
+        assertEquals("502 TIMEOUT", in.readLine());
         try {
             assertEquals(-1, in.read());
         }
