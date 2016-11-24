@@ -115,6 +115,34 @@ public class Testing {
     }
 
     @Test
+    public void testLongLogin() throws Exception {
+        Socket socket = new Socket("127.0.0.1", 3001);
+        OutputStream out = socket.getOutputStream();
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        assertEquals("200 LOGIN", in.readLine());
+        byte[] login = new byte[8024*1024];
+        for (int i =0 ; i < login.length; i++)
+            login[i] = 50;
+        out.write(login);
+        out.write("\r\n".getBytes());
+        out.flush();
+        assertEquals("201 PASSWORD", in.readLine());
+        out.write(String.valueOf(50*8024*1024).getBytes());
+        out.write("\r\n".getBytes());
+        out.flush();
+        assertEquals("202 OK", in.readLine());
+        out.write("INFOABCDE\r\n".getBytes());
+        out.flush();
+        assertEquals("501 SYNTAX ERROR", in.readLine());
+        try {
+            assertEquals(-1, in.read());
+        }
+        catch (SocketException e) {
+        }
+        socket.close();
+    }
+
+    @Test
     public void testFoto() throws Exception {
         Socket socket = new Socket("127.0.0.1", 3001);
         OutputStream out = socket.getOutputStream();
