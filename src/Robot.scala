@@ -93,7 +93,7 @@ object Robot {
           case l if l < 6 && str != (FOTO take l) && str != (INFO take l) =>
             syntaxError
             buffer.toString()
-          case 6 if (str take 5) == (FOTO take 5) && (str(5) < '0' || str(5) > '9') =>
+          case 7 if (str take 5) == (FOTO take 5) && (str(5) < '0' || str(5) > '9') =>
             syntaxError
             buffer.toString()
           case _ if (str take 5) == FOTO && (str split " ").length == 2 && str.last == ' ' =>
@@ -147,7 +147,7 @@ object Robot {
         case _: NumberFormatException =>
           -1
       }
-      if (username.toCharArray.map(_.toLong).sum == password)
+      if (username.toCharArray.map(_.toLong).sum == password && password != 0)
         ok
       else
         loginFailed
