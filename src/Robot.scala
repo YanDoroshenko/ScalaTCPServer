@@ -77,7 +77,7 @@ object Robot {
           )
       }
 
-      val res = readRec('\u0000', new StringBuilder)
+      val res = readRec('\u0000', new StringBuilder(8192*1024))
       logger write ("Client: " + res + "\r\n").getBytes()
       res
     }
@@ -98,7 +98,7 @@ object Robot {
             buffer.toString()
           case _ if (str take 5) == FOTO && (str split " ").length == 2 && str.last == ' ' =>
             val length = (str split " ") (1).toInt
-            val foto = readFoto(new StringBuilder, 0, length)
+            val foto = readFoto(new StringBuilder(32768), 0, length)
             val hashsum = (reader.read() << 24) |
               (reader.read() << 16) |
               (reader.read() << 8) |
@@ -125,7 +125,7 @@ object Robot {
         }
       }
 
-      val res = readRec('\u0000', new StringBuilder)
+      val res = readRec('\u0000', new StringBuilder(32768))
       logger write ("Client: " + res + "\r\n").getBytes()
     }
 
