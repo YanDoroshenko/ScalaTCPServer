@@ -25,6 +25,11 @@ public class Testing {
         Thread.sleep(6000);
     }
 
+    @AfterClass
+    public static void stopServer() throws Exception {
+        server.interrupt();
+    }
+
     @Test
     public void testSyntaxError() throws Exception {
         Socket socket = new Socket("127.0.0.1", 3001);
@@ -42,8 +47,7 @@ public class Testing {
         assertEquals("501 SYNTAX ERROR", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
     }
@@ -68,8 +72,7 @@ public class Testing {
         assertEquals("501 SYNTAX ERROR", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
     }
@@ -88,8 +91,7 @@ public class Testing {
         assertEquals("500 LOGIN FAILED", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
     }
@@ -108,8 +110,7 @@ public class Testing {
         assertEquals("500 LOGIN FAILED", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
     }
@@ -120,14 +121,17 @@ public class Testing {
         OutputStream out = socket.getOutputStream();
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         assertEquals("200 LOGIN", in.readLine());
-        byte[] login = new byte[8024*1024];
-        for (int i =0 ; i < login.length; i++)
+        byte[] login = new byte[8192];
+        for (int i = 0; i < login.length; i++)
             login[i] = 50;
-        out.write(login);
+        for (int i = 0; i < 1024; i++) {
+            out.write(login);
+            out.flush();
+        }
         out.write("\r\n".getBytes());
         out.flush();
         assertEquals("201 PASSWORD", in.readLine());
-        out.write(String.valueOf(50*8024*1024).getBytes());
+        out.write(String.valueOf(50 * 8192 * 1024).getBytes());
         out.write("\r\n".getBytes());
         out.flush();
         assertEquals("202 OK", in.readLine());
@@ -136,8 +140,7 @@ public class Testing {
         assertEquals("501 SYNTAX ERROR", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
     }
@@ -164,8 +167,7 @@ public class Testing {
         assertEquals("501 SYNTAX ERROR", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
     }
@@ -189,8 +191,7 @@ public class Testing {
         assertEquals("501 SYNTAX ERROR", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
     }
@@ -217,8 +218,7 @@ public class Testing {
         assertEquals("501 SYNTAX ERROR", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
     }
@@ -245,8 +245,7 @@ public class Testing {
         assertEquals("501 SYNTAX ERROR", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
     }
@@ -283,14 +282,13 @@ public class Testing {
         assertEquals("501 SYNTAX ERROR", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
     }
 
     @Test
-    public void timeoutTest() throws Exception{
+    public void timeoutTest() throws Exception {
         Socket socket = new Socket("127.0.0.1", 3001);
         BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         assertEquals("200 LOGIN", in.readLine());
@@ -298,15 +296,9 @@ public class Testing {
         assertEquals("502 TIMEOUT", in.readLine());
         try {
             assertEquals(-1, in.read());
-        }
-        catch (SocketException e) {
+        } catch (SocketException e) {
         }
         socket.close();
-    }
-
-    @AfterClass
-    public static void stopServer() throws Exception {
-        server.interrupt();
     }
 
 }
