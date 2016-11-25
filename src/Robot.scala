@@ -3,11 +3,27 @@ import java.net.{ServerSocket, Socket}
 import java.util.concurrent.Executors
 
 import scala.annotation.tailrec
+import scala.util.Random
 
 /**
   * Created by Yan Doroshenko (yandoroshenko@protonmail.com) on 23.11.16.
   */
 object Robot {
+
+  def main(args: Array[String]): Unit = {
+    if (args.length < 1)
+      println("No port specified!")
+    else {
+      print("Creating server on port " + args(0))
+      val socket = new ServerSocket(args(0).toInt)
+      val executor = Executors.newCachedThreadPool()
+      var i = 1
+      while (!socket.isClosed) {
+        executor submit new Communicator(socket.accept(), i)
+        i += 1
+      }
+    }
+  }
 
   class Communicator(socket: Socket, connectionId: Int) extends Thread {
     final val FOTO = "FOTO "
@@ -16,6 +32,33 @@ object Robot {
     val reader = socket.getInputStream()
     val writer = socket.getOutputStream()
     val logger = new FileOutputStream("Robot" + connectionId + ".log")
+
+    override def run(): Unit = {
+      new Thread() {
+        override def run(): Unit = {
+          Thread.sleep(45000)
+          timeout
+        }
+      }.start()
+
+      login
+      val username = read
+      passwd
+      val password = try {
+        read.toLong
+      }
+      catch {
+        case _: NumberFormatException =>
+          -1
+      }
+      if (username.toCharArray.map(_.toLong).sum == password && password != 0)
+        ok
+      else
+        loginFailed
+
+      while (!socket.isClosed)
+        readSyntax
+    }
 
     def login = {
       writer write "200 LOGIN\r\n".getBytes
@@ -32,23 +75,10 @@ object Robot {
       logger write "Server: OK\r\n".getBytes
     }
 
-    def badChecksum = {
-      writer write "300 BAD CHECKSUM\r\n".getBytes
-      logger write "Server: Bad checksum\r\n".getBytes
-    }
-
     def loginFailed = {
       logger write "Server: Login failed\r\n".getBytes
       if (!socket.isClosed) {
         writer write "500 LOGIN FAILED\r\n".getBytes
-        socket.close()
-      }
-    }
-
-    def syntaxError = {
-      logger write "Server: Syntax error\r\n".getBytes
-      if (!socket.isClosed) {
-        writer write "501 SYNTAX ERROR\r\n".getBytes
         socket.close()
       }
     }
@@ -77,7 +107,7 @@ object Robot {
           )
       }
 
-      val res = readRec('\u0000', new StringBuilder(8192*1024))
+      val res = readRec('\u0000', new StringBuilder(8192 * 1024))
       logger write ("Client: " + res + "\r\n").getBytes()
       res
     }
@@ -89,7 +119,7 @@ object Robot {
         val c = reader.read().toChar
         buffer += c
         val str = buffer.toString
-        str length match {
+        str.length match {
           case l if l < 6 && str != (FOTO take l) && str != (INFO take l) =>
             syntaxError
             buffer.toString()
@@ -103,11 +133,13 @@ object Robot {
               (reader.read() << 16) |
               (reader.read() << 8) |
               reader.read()
-            if (foto.map((e: Byte) => (e & 0xff).toLong).sum == hashsum)
+            if (foto.map((e: Byte) => (e & 0xff).toLong).sum == hashsum) {
+              new FileOutputStream("foto" + new Random().nextInt(999) + ".png").write(foto)
               ok
+            }
             else
               badChecksum
-            str + foto.mkString("["," ", "]") + " with actual hashsum: " + foto.map((e: Byte) => (e & 0xff).toLong).sum + "\r\nHashsum entered: " + hashsum
+            str + foto.mkString("[", " ", "]") + " with actual hashsum: " + foto.map((e: Byte) => (e & 0xff).toLong).sum + "\r\nHashsum entered: " + hashsum
           case _ if last == '\r' && c == '\n' =>
             ok
             buffer.toString()
@@ -129,45 +161,16 @@ object Robot {
       logger write ("Client: " + res + "\r\n").getBytes()
     }
 
-    override def run(): Unit = {
-      new Thread() {
-        override def run(): Unit = {
-          Thread.sleep(45000)
-          timeout
-        }
-      }.start()
-
-      login
-      val username = read
-      passwd
-      val password = try {
-        read.toLong
-      }
-      catch {
-        case _: NumberFormatException =>
-          -1
-      }
-      if (username.toCharArray.map(_.toLong).sum == password && password != 0)
-        ok
-      else
-        loginFailed
-
-      while (!socket.isClosed)
-        readSyntax
+    def badChecksum = {
+      writer write "300 BAD CHECKSUM\r\n".getBytes
+      logger write "Server: Bad checksum\r\n".getBytes
     }
-  }
 
-  def main(args: Array[String]): Unit = {
-    if (args.length < 1)
-      println("No port specified!")
-    else {
-      print("Creating server on port " + args(0))
-      val socket = new ServerSocket(args(0).toInt)
-      val executor = Executors.newCachedThreadPool()
-      var i = 1
-      while (!socket.isClosed) {
-        executor submit new Communicator(socket.accept(), i)
-        i += 1
+    def syntaxError = {
+      logger write "Server: Syntax error\r\n".getBytes
+      if (!socket.isClosed) {
+        writer write "501 SYNTAX ERROR\r\n".getBytes
+        socket.close()
       }
     }
   }
