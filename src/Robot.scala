@@ -10,6 +10,7 @@ import scala.util.Random
   */
 object Robot {
 
+  /* Main method, creates ServerSocket and creates a new thread after accepting connection. Multrithreading is done with ThreadPoolExecutor*/
   def main(args: Array[String]): Unit = {
     if (args.length < 1)
       println("No port specified!")
@@ -25,15 +26,21 @@ object Robot {
     }
   }
 
+  /*Thread that communicates with a single client*/
   class Communicator(socket: Socket, connectionId: Int) extends Thread {
+    /*Constants for checking syntax*/
     final val FOTO = "FOTO "
     final val INFO = "INFO "
 
+    /*Socket IO*/
     val reader = socket.getInputStream()
     val writer = socket.getOutputStream()
+
+    /*File logger*/
     val logger = new FileOutputStream("Robot" + connectionId + ".log")
 
     override def run(): Unit = {
+      /*Timer*/
       new Thread() {
         override def run(): Unit = {
           Thread.sleep(45000)
@@ -60,6 +67,7 @@ object Robot {
         readSyntax
     }
 
+    /*Response methods*/
     def login = {
       writer write "200 LOGIN\r\n".getBytes
       logger write "Server: Login?\r\n".getBytes
@@ -91,6 +99,7 @@ object Robot {
       }
     }
 
+    /*Method for reading without checking syntax, for reading login and password*/
     def read = {
 
       @tailrec
@@ -107,11 +116,13 @@ object Robot {
           )
       }
 
+      /*String builder with predefined capacity for performance optimization*/
       val res = readRec('\u0000', new StringBuilder(8192 * 1024))
       logger write ("Client: " + res + "\r\n").getBytes()
       res
     }
 
+    /*Method that checks syntax while reading*/
     def readSyntax = {
 
       @tailrec
@@ -123,9 +134,13 @@ object Robot {
           case l if l < 6 && str != (FOTO take l) && str != (INFO take l) =>
             syntaxError
             buffer.toString()
+
+          /*Wrong FOTO length*/
           case 7 if (str take 5) == (FOTO take 5) && (str(5) < '0' || str(5) > '9') =>
             syntaxError
             buffer.toString()
+
+          /*Read the picture*/
           case _ if (str take 5) == FOTO && (str split " ").length == 2 && str.last == ' ' =>
             val length = (str split " ") (1).toInt
             val foto = readFoto(new StringBuilder(32768), 0, length)
@@ -134,6 +149,7 @@ object Robot {
               (reader.read() << 8) |
               reader.read()
             if (foto.map((e: Byte) => (e & 0xff).toLong).sum == hashsum) {
+              /*Save the picture into file*/
               new FileOutputStream("foto" + new Random().nextInt(999) + ".png").write(foto)
               ok
             }
@@ -148,6 +164,7 @@ object Robot {
         }
       }
 
+      /*Function for reading the FOTO body*/
       @tailrec
       def readFoto(buffer: StringBuilder, read: Long, length: Long): Array[Byte] = {
         if (read == length)
@@ -174,4 +191,5 @@ object Robot {
       }
     }
   }
+
 }
