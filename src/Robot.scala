@@ -142,20 +142,27 @@ object Robot {
 
           /*Read the picture*/
           case _ if (str take 5) == FOTO && (str split " ").length == 2 && str.last == ' ' =>
-            val length = (str split " ") (1).toInt
-            val foto = readFoto(new StringBuilder(32768), 0, length)
-            val hashsum = (reader.read() << 24) |
-              (reader.read() << 16) |
-              (reader.read() << 8) |
-              reader.read()
-            if (foto.map((e: Byte) => (e & 0xff).toLong).sum == hashsum) {
-              /*Save the picture into file*/
-              new FileOutputStream("foto" + new Random().nextInt(999) + ".png").write(foto)
-              ok
+            try {
+              val length = (str split " ") (1).toInt
+              val foto = readFoto(new StringBuilder(32768), 0, length)
+              val hashsum = (reader.read() << 24) |
+                (reader.read() << 16) |
+                (reader.read() << 8) |
+                reader.read()
+              if (foto.map((e: Byte) => (e & 0xff).toLong).sum == hashsum) {
+                /*Save the picture into file*/
+                new FileOutputStream("foto" + new Random().nextInt(999) + ".png").write(foto)
+                ok
+              }
+              else
+                badChecksum
+              str + foto.mkString("[", " ", "]") + " with actual hashsum: " + foto.map((e: Byte) => (e & 0xff).toLong).sum + "\r\nHashsum entered: " + hashsum
             }
-            else
-              badChecksum
-            str + foto.mkString("[", " ", "]") + " with actual hashsum: " + foto.map((e: Byte) => (e & 0xff).toLong).sum + "\r\nHashsum entered: " + hashsum
+            catch {
+              case e: NumberFormatException =>
+                syntaxError
+                buffer.toString()
+            }
           case _ if last == '\r' && c == '\n' =>
             ok
             buffer.toString()
