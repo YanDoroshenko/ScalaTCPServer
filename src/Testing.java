@@ -48,6 +48,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
@@ -73,6 +74,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
@@ -92,6 +94,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
@@ -111,6 +114,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
@@ -141,6 +145,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
@@ -168,6 +173,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
@@ -192,6 +198,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
@@ -219,6 +226,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
@@ -246,6 +254,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
@@ -283,6 +292,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
@@ -297,6 +307,7 @@ public class Testing {
         try {
             assertEquals(-1, in.read());
         } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
         }
         socket.close();
     }
