@@ -204,6 +204,31 @@ public class Testing {
     }
 
     @Test
+    public void testFotoBadLengthAgain() throws Exception {
+        Socket socket = new Socket("127.0.0.1", 3001);
+        OutputStream out = socket.getOutputStream();
+        BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        assertEquals("200 LOGIN", in.readLine());
+        out.write("2\r\n".getBytes());
+        out.flush();
+        assertEquals("201 PASSWORD", in.readLine());
+        out.write("50\r\n".getBytes());
+        out.flush();
+        assertEquals("202 OK", in.readLine());
+        out.write("FOTO 1a3 A\r\nB\0CD\r\nEFGH".getBytes());
+        byte[] hashsum = {0x0, 0x0, 0x2, 0x52};
+        out.write(hashsum);
+        out.flush();
+        assertEquals("501 SYNTAX ERROR", in.readLine());
+        try {
+            assertEquals(-1, in.read());
+        } catch (SocketException e) {
+            assertEquals("Connection reset", e.getMessage());
+        }
+        socket.close();
+    }
+
+    @Test
     public void testMalformedFoto() throws Exception {
         Socket socket = new Socket("127.0.0.1", 3001);
         OutputStream out = socket.getOutputStream();
